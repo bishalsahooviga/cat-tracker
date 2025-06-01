@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAT Topic Tracker - Monthly Progress</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 1rem; 
+      max-width: 1200px; 
+      margin: auto; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    
+    h1 { 
+      color: #2d3748; 
+      text-align: center; 
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .dashboard { 
+      background: linear-gradient(135deg, #667eea, #764ba2); 
+      color: white;
+      padding: 2rem; 
+      margin-bottom: 2rem; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    
+    .month-selector {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      backdrop-filter: blur(5px);
+    }
+    
+    .month-selector option {
+      background: #667eea;
+      color: white;
+    }
+    
+    .subject { 
+      background: white; 
+      padding: 1.5rem; 
+      margin-bottom: 1.5rem; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    
+    .subject h2 {
+      color: #2d3748;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    
+    .subject h2:hover {
+      color: #667eea;
+    }
+    
+    .expand-icon {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .expand-icon.expanded {
+      transform: rotate(90deg);
+    }
+    
+    .topic-section {
+      margin-bottom: 1.5rem;
+      border-left: 3px solid #e2e8f0;
+      padding-left: 1rem;
+    }
+    
+    .topic-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(102, 126, 234, 0.05);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .topic-header:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .topic-title {
+      font-weight: 600;
+      color: #4a5568;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .topic-progress {
+      font-size: 0.875rem;
+      color: #667eea;
+      font-weight: 500;
+    }
+    
+    .subtopics {
+      display: none;
+      padding-left: 1rem;
+      border-left: 2px solid #e2e8f0;
+      margin-top: 0.5rem;
+    }
+    
+    .subtopics.expanded {
+      display: block;
+    }
+    
+    .subtopics { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+      gap: 0.5rem; 
+      padding: 0.75rem;
+    }
+    
+    .checkbox-item { 
+      display: flex; 
+      align-items: center; 
+      gap: 0.75rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    .checkbox-item:hover {
+      background: rgba(102, 126, 234, 0.05);
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #667eea;
+    }
+    
+    .line-through { 
+      text-decoration: line-through; 
+      color: #a0aec0; 
+    }
+    
+    input[type="number"] { 
+      width: 80px; 
+      padding: 0.5rem; 
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      backdrop-filter: blur(5px);
+    }
+    
+    input[type="number"]::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #48bb78, #38a169);
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+    
+    .connection-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 500;
+      z-index: 1000;
+    }
+    
+    .status-connected { background: #48bb78; }
+    .status-disconnected { background: #f56565; }
+    .status-connecting { background: #ed8936; }
+    
+    .monthly-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(5px);
+    }
+    
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CAT Topic Tracker</h1>
+    
+    <div id="connection-status" class="connection-status status-connecting">
+      Connecting to Firebase...
+    </div>
+    
+    <div class="dashboard">
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="total-topics">0</div>
+          <div>Total Topics</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="completed-topics">0</div>
+          <div>Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="progress-percent">0%</div>
+          <div>Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="monthly-completed">0</div>
+          <div>This Month</div>
+        </div>
+      </div>
+      
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-bar"></div>
+      </div>
+      
+      <div class="controls">
+        <label style="color: white;">
+          Current Month:
+          <select id="month-selector" class="month-selector">
+            <option value="2025-06">June 2025</option>
+            <option value="2025-07">July 2025</option>
+            <option value="2025-08">August 2025</option>
+            <option value="2025-09">September 2025</option>
+            <option value="2025-10">October 2025</option>
+            <option value="2025-11">November 2025</option>
+            <option value="2025-12">December 2025</option>
+          </select>
+        </label>
+        
+        <label style="color: white;">
+          Monthly Goal:
+          <input type="number" id="monthly-goal" value="100" min="50" max="300" />
+        </label>
+        
+        <button class="btn" onclick="resetCurrentMonth()">Reset Month</button>
+        <button class="btn" onclick="exportData()">Export Data</button>
+      </div>
+      
+      <div class="monthly-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="monthly-goal-display">50</div>
+          <div>Monthly Goal</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="goal-progress">0%</div>
+          <div>Goal Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="days-left">-</div>
+          <div>Days Left</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="daily-target">-</div>
+          <div>Daily Target</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="topics-container"></div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app-compat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database-compat.min.js"></script>
+
+  <script>
+    // Firebase Configuration - Replace with your own config
+    const firebaseConfig = {
+    apiKey: "AIzaSyBDH4ypn_RyUgordiZJzq_PTCp5kK38dkA",
+    authDomain: "amogh-ba7a7.firebaseapp.com",
+    databaseURL: "https://amogh-ba7a7-default-rtdb.firebaseio.com",
+    projectId: "amogh-ba7a7",
+    storageBucket: "amogh-ba7a7.firebasestorage.app",
+    messagingSenderId: "729469027437",
+    appId: "1:729469027437:web:ccde3f3657ab36a23ceb64",
+    measurementId: "G-4H8WFPMS0H"
+    };
+
+    // Initialize Firebase
+    let database;
+    let isConnected = false;
+    
+    try {
+      firebase.initializeApp(firebaseConfig);
+      database = firebase.database();
+      
+      // Connection status monitoring
+      database.ref('.info/connected').on('value', (snapshot) => {
+        isConnected = snapshot.val();
+        updateConnectionStatus();
+      });
+    } catch (error) {
+      console.warn('Firebase not configured. Using demo mode.');
+      updateConnectionStatus();
+    }
+
+    const topics = {
+      "Quantitative Aptitude": {
+        "HCF and LCM": ["Euclidean Algorithm", "Prime Factorization", "Applications in Time-Work", "Co-prime Numbers"],
+        "Factors": ["Perfect Numbers", "Factor Counting", "Sum of Factors", "Product of Factors"],
+        "Remainders": ["Wilson's Theorem", "Fermat's Little Theorem", "Chinese Remainder Theorem", "Cyclicity"],
+        "Factorials": ["Trailing Zeros", "Highest Power of Prime", "Factorial Equations", "Unit Digit"],
+        "Digits": ["Sum of Digits", "Digital Root", "Reversing Numbers", "Palindromes"],
+        "Ratios, Mixtures; Averages": ["Weighted Average", "Alligation", "Replacement Problems", "Component Ratios"],
+        "Percents, Profits, SICI": ["Percentage Change", "Successive Discounts", "Marked Price Problems", "Compound Interest"],
+        "Speed, Time, Distance; Races": ["Relative Speed", "Boats and Streams", "Trains", "Circular Tracks"],
+        "Logarithms and Exponents": ["Properties", "Equations", "Inequalities", "Graphical Representation"],
+        "Pipes, Cisterns; Work, Time": ["Multiple Pipes", "Efficiency", "Alternating Work", "Leak Problems"],
+        "Set Theory": ["Venn Diagrams", "Union-Intersection", "De Morgan's Laws", "Principle of Inclusion-Exclusion"],
+        "Geometry": ["Lines and Angles", "Triangles", "Quadrilaterals", "Circles"],
+        "Co-Geo": ["Distance Formula", "Section Formula", "Area of Triangle", "Equation of Lines"],
+        "Mensuration": ["Area", "Perimeter", "Volume", "Surface Area"],
+        "Trigonometry": ["Ratios", "Identities", "Heights and Distances", "Inverse Functions"],
+        "Linear & Quadratic": ["Linear Equations", "Quadratic Equations", "System of Equations", "Graphical Solutions"],
+        "Functions": ["Domain-Range", "Composition", "Inverse Functions", "Graphical Analysis"],
+        "Inequalities": ["Linear Inequalities", "Quadratic Inequalities", "Modulus", "Graphical Method"],
+        "Polynomials": ["Remainder Theorem", "Factor Theorem", "Synthetic Division", "Graphs"],
+        "Progressions": ["AP", "GP", "HP", "AGP"],
+        "Combinatorics": ["Permutations", "Combinations", "Circular Arrangements", "Restricted Arrangements"]
+      },
+      "Verbal Ability": {
+        "Para Jumble": ["Chronological Order", "Cause-Effect", "General to Specific", "Question-Answer"],
+        "Sentence Correction": ["Subject-Verb Agreement", "Parallelism", "Modifiers", "Idioms"],
+        "Sentence Elimination": ["Odd One Out", "Context Relevance", "Tone Mismatch", "Logical Flow"],
+        "Paragraph Completion": ["Main Idea", "Supporting Details", "Concluding Statements", "Transitional Phrases"],
+        "Reading Comprehension": ["Main Idea", "Supporting Details", "Inference", "Tone and Style"],
+        "Critical Reasoning": ["Assumptions", "Strengthen-Weaken", "Conclusion", "Parallel Reasoning"],
+        "Word Usage": ["Contextual Meaning", "Synonyms", "Antonyms", "Phrasal Verbs"],
+        "Para Summary": ["Key Points Extraction", "Concise Writing", "Main Theme", "Supporting Arguments"],
+        "Text Completion": ["Context Clues", "Logical Connectors", "Vocabulary", "Sentence Structure"]
+      },
+      "DI LR": {
+        "Bar Graphs": ["Single Bar", "Multiple Bar", "Stacked Bar", "Percentage Bar"],
+        "Pie Charts": ["Sector Analysis", "Multiple Pies", "Percentage Calculation", "Comparative Analysis"],
+        "Multiple Graphs": ["Line + Bar", "Comparative Charts", "Trend Analysis", "Data Integration"],
+        "Word Problems": ["Percentage Problems", "Ratio Problems", "Average Problems", "Profit-Loss"],
+        "Line Graphs": ["Single Line", "Multiple Lines", "Trend Analysis", "Rate of Change"],
+        "Sequencing": ["Linear Arrangement", "Circular Arrangement", "Conditions", "Possibilities"],
+        "Grid Puzzles": ["Matrix Puzzles", "Sudoku-type", "Path Finding", "Pattern Recognition"],
+        "Math Puzzles": ["Number Series", "Equation Building", "Logic Gates", "Optimization"],
+        "Visualization": ["3D Shapes", "Spatial Reasoning", "Pattern Matching", "Image Analysis"],
+        "Other Patterns": ["Series Completion", "Analogies", "Classification", "Coding-Decoding"],
+        "2017 Airlines": ["Route Analysis", "Passenger Data", "Revenue Calculation", "Time Tables"],
+        "2017 Travel": ["Distance Calculation", "Cost Analysis", "Mode Comparison", "Schedule Planning"],
+        "2017 CET": ["Score Analysis", "Ranking", "Category-wise Performance", "Cut-off Analysis"],
+        "2017 Fastfood": ["Sales Data", "Profit Analysis", "Menu Pricing", "Customer Preferences"],
+        "2017 Rural Survey": ["Demographics", "Income Analysis", "Resource Distribution", "Development Indices"],
+        "2017 Happiness": ["Survey Data", "Correlation Analysis", "Ranking", "Factor Identification"],
+        "2017 Square": ["Area Calculation", "Optimization", "Geometric Constraints", "Pattern Analysis"],
+        "2017 Team": ["Team Formation", "Performance Analysis", "Resource Allocation", "Strategy Planning"],
+        "2017 Assets": ["Investment Analysis", "Portfolio Management", "Risk Assessment", "Return Calculation"],
+        "2017 Chess": ["Tournament Analysis", "Player Rankings", "Match Outcomes", "Strategy Evaluation"],
+        "2017 Dorms": ["Accommodation Planning", "Cost Analysis", "Capacity Optimization", "Preference Matching"],
+        "2017 Friends": ["Network Analysis", "Relationship Mapping", "Group Formation", "Social Dynamics"],
+        "2017 Electives": ["Course Selection", "Schedule Planning", "Prerequisite Analysis", "Credit Calculation"],
+        "2017 Pizza": ["Order Analysis", "Delivery Optimization", "Cost Calculation", "Customer Preferences"],
+        "2017 Security": ["Access Control", "Risk Assessment", "Resource Allocation", "Incident Analysis"],
+        "2017 Tea": ["Production Analysis", "Quality Control", "Market Analysis", "Price Optimization"]
+      }
+    };
+
+    let currentMonth = new Date().toISOString().substring(0, 7); // Format: YYYY-MM
+    let monthlyData = {};
+    let globalSettings = { monthlyGoal: 100 };
+
+    function updateConnectionStatus() {
+      const statusEl = document.getElementById('connection-status');
+      if (!database) {
+        statusEl.textContent = 'Demo Mode (No Firebase)';
+        statusEl.className = 'connection-status status-disconnected';
+      } else if (isConnected) {
+        statusEl.textContent = 'Connected to Firebase';
+        statusEl.className = 'connection-status status-connected';
+      } else {
+        statusEl.textContent = 'Connecting...';
+        statusEl.className = 'connection-status status-connecting';
+      }
+    }
+
+    function getCurrentMonthData() {
+      return monthlyData[currentMonth] || { 
+        checked: {}, 
+        completedCount: 0,
+        monthlyGoal: globalSettings.monthlyGoal 
+      };
+    }
+
+    function saveToFirebase() {
+      if (!database) {
+        // Fallback to localStorage in demo mode
+        localStorage.setItem('cat_tracker_data', JSON.stringify({
+          monthlyData,
+          globalSettings,
+          currentMonth
+        }));
+        return;
+      }
+
+      database.ref('catTracker').set({
+        monthlyData,
+        globalSettings,
+        lastUpdated: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+    function loadFromFirebase() {
+      if (!database) {
+        // Fallback to localStorage in demo mode
+        const data = localStorage.getItem('cat_tracker_data');
+        if (data) {
+          const parsed = JSON.parse(data);
+          monthlyData = parsed.monthlyData || {};
+          globalSettings = parsed.globalSettings || { monthlyGoal: 50 };
+          currentMonth = parsed.currentMonth || currentMonth;
+        }
+        updateUI();
+        return;
+      }
+
+      database.ref('catTracker').once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          monthlyData = data.monthlyData || {};
+          globalSettings = data.globalSettings || { monthlyGoal: 50 };
+        }
+        updateUI();
+      });
+    }
+
+    function updateDashboard() {
+      // Calculate total topics and subtopics
+      let totalTopics = 0;
+      let totalSubtopics = 0;
+      
+      for (const subject in topics) {
+        for (const topic in topics[subject]) {
+          totalTopics++;
+          totalSubtopics += topics[subject][topic].length;
+        }
+      }
+      
+      const currentData = getCurrentMonthData();
+      
+      // Count completed topics and subtopics
+      let completedTopics = 0;
+      let completedSubtopics = 0;
+      
+      for (const subject in topics) {
+        for (const topic in topics[subject]) {
+          const topicKey = `${subject}__${topic}`;
+          if (currentData.checked[topicKey]) completedTopics++;
+          
+          topics[subject][topic].forEach(subtopic => {
+            const subtopicKey = `${subject}__${topic}__${subtopic}`;
+            if (currentData.checked[subtopicKey]) completedSubtopics++;
+          });
+        }
+      }
+      
+      const totalItems = totalTopics + totalSubtopics;
+      const completedItems = completedTopics + completedSubtopics;
+      const percent = totalItems > 0 ? ((completedItems / totalItems) * 100).toFixed(1) : 0;
+      const goalProgress = currentData.monthlyGoal > 0 ? 
+        ((completedItems / currentData.monthlyGoal) * 100).toFixed(1) : 0;
+
+      document.getElementById('total-topics').textContent = totalItems;
+      document.getElementById('completed-topics').textContent = completedItems;
+      document.getElementById('progress-percent').textContent = `${percent}%`;
+      document.getElementById('monthly-completed').textContent = completedItems;
+      document.getElementById('monthly-goal-display').textContent = currentData.monthlyGoal || 100;
+      document.getElementById('goal-progress').textContent = `${goalProgress}%`;
+      
+      // Update progress bar
+      document.getElementById('progress-bar').style.width = `${percent}%`;
+      
+      // Calculate days left and daily target
+      const now = new Date();
+      const [year, month] = currentMonth.split('-').map(Number);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const currentDay = now.getMonth() + 1 === month && now.getFullYear() === year ? now.getDate() : 1;
+      const daysLeft = Math.max(0, daysInMonth - currentDay + 1);
+      const remaining = Math.max(0, (currentData.monthlyGoal || 100) - completedItems);
+      const dailyTarget = daysLeft > 0 ? Math.ceil(remaining / daysLeft) : 0;
+      
+      document.getElementById('days-left').textContent = daysLeft;
+      document.getElementById('daily-target').textContent = dailyTarget;
+    }
+
+    function renderTopics() {
+      const container = document.getElementById('topics-container');
+      container.innerHTML = '';
+      const currentData = getCurrentMonthData();
+      
+      for (const subject in topics) {
+        const section = document.createElement('div');
+        section.className = 'subject';
+
+        const title = document.createElement('h2');
+        title.innerHTML = `${subject} <span class="expand-icon">▶</span>`;
+        title.addEventListener('click', () => {
+          const isExpanded = section.classList.toggle('expanded');
+          const icon = title.querySelector('.expand-icon');
+          icon.classList.toggle('expanded', isExpanded);
+          
+          const topicSections = section.querySelectorAll('.topic-section');
+          topicSections.forEach(topicSection => {
+            topicSection.style.display = isExpanded ? 'block' : 'none';
+          });
+        });
+        section.appendChild(title);
+
+        // Create topics within this subject
+        for (const topic in topics[subject]) {
+          const topicSection = document.createElement('div');
+          topicSection.className = 'topic-section';
+          topicSection.style.display = 'none'; // Initially collapsed
+
+          // Topic header with checkbox and progress
+          const topicHeader = document.createElement('div');
+          topicHeader.className = 'topic-header';
+
+          const topicTitleDiv = document.createElement('div');
+          topicTitleDiv.className = 'topic-title';
+
+          const topicKey = `${subject}__${topic}`;
+          const topicCheckbox = document.createElement('input');
+          topicCheckbox.type = 'checkbox';
+          topicCheckbox.id = topicKey;
+          topicCheckbox.checked = !!currentData.checked[topicKey];
+
+          const topicLabel = document.createElement('label');
+          topicLabel.setAttribute('for', topicKey);
+          topicLabel.textContent = topic;
+          if (currentData.checked[topicKey]) topicLabel.className = 'line-through';
+
+          // Calculate topic progress
+          const subtopics = topics[subject][topic];
+          const completedSubtopics = subtopics.filter(subtopic => {
+            const subtopicKey = `${subject}__${topic}__${subtopic}`;
+            return currentData.checked[subtopicKey];
+          }).length;
+          
+          const topicProgress = document.createElement('div');
+          topicProgress.className = 'topic-progress';
+          topicProgress.textContent = `${completedSubtopics}/${subtopics.length}`;
+
+          const expandIcon = document.createElement('span');
+          expandIcon.className = 'expand-icon';
+          expandIcon.textContent = '▶';
+
+          topicTitleDiv.appendChild(topicCheckbox);
+          topicTitleDiv.appendChild(topicLabel);
+          topicTitleDiv.appendChild(expandIcon);
+
+          topicHeader.appendChild(topicTitleDiv);
+          topicHeader.appendChild(topicProgress);
+
+          // Subtopics container
+          const subtopicsContainer = document.createElement('div');
+          subtopicsContainer.className = 'subtopics';
+
+          // Add subtopics
+          topics[subject][topic].forEach(subtopic => {
+            const subtopicKey = `${subject}__${topic}__${subtopic}`;
+
+            const checkboxContainer = document.createElement('div');
+            checkboxContainer.className = 'checkbox-item';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = subtopicKey;
+            checkbox.checked = !!currentData.checked[subtopicKey];
+
+            const label = document.createElement('label');
+            label.setAttribute('for', subtopicKey);
+            label.textContent = subtopic;
+            if (currentData.checked[subtopicKey]) label.className = 'line-through';
+
+            checkbox.addEventListener('change', () => {
+              const wasChecked = !!currentData.checked[subtopicKey];
+              
+              if (!monthlyData[currentMonth]) {
+                monthlyData[currentMonth] = { 
+                  checked: {}, 
+                  completedCount: 0,
+                  monthlyGoal: globalSettings.monthlyGoal 
+                };
+              }
+              
+              monthlyData[currentMonth].checked[subtopicKey] = !wasChecked;
+              
+              updateDashboard();
+              saveToFirebase();
+              label.className = monthlyData[currentMonth].checked[subtopicKey] ? 'line-through' : '';
+              
+              // Update topic progress
+              const newCompletedSubtopics = subtopics.filter(st => {
+                const stKey = `${subject}__${topic}__${st}`;
+                return monthlyData[currentMonth].checked[stKey];
+              }).length;
+              topicProgress.textContent = `${newCompletedSubtopics}/${subtopics.length}`;
+            });
+
+            checkboxContainer.appendChild(checkbox);
+            checkboxContainer.appendChild(label);
+            subtopicsContainer.appendChild(checkboxContainer);
+          });
+
+          // Topic checkbox event listener
+          topicCheckbox.addEventListener('change', () => {
+            const wasChecked = !!currentData.checked[topicKey];
+            
+            if (!monthlyData[currentMonth]) {
+              monthlyData[currentMonth] = { 
+                checked: {}, 
+                completedCount: 0,
+                monthlyGoal: globalSettings.monthlyGoal 
+              };
+            }
+            
+            monthlyData[currentMonth].checked[topicKey] = !wasChecked;
+            
+            // Also toggle all subtopics
+            topics[subject][topic].forEach(subtopic => {
+              const subtopicKey = `${subject}__${topic}__${subtopic}`;
+              monthlyData[currentMonth].checked[subtopicKey] = !wasChecked;
+              
+              const subtopicCheckbox = document.getElementById(subtopicKey);
+              const subtopicLabel = document.querySelector(`label[for="${subtopicKey}"]`);
+              if (subtopicCheckbox && subtopicLabel) {
+                subtopicCheckbox.checked = !wasChecked;
+                subtopicLabel.className = !wasChecked ? 'line-through' : '';
+              }
+            });
+            
+            updateDashboard();
+            saveToFirebase();
+            topicLabel.className = !wasChecked ? 'line-through' : '';
+            topicProgress.textContent = !wasChecked ? `${subtopics.length}/${subtopics.length}` : `0/${subtopics.length}`;
+          });
+
+          // Topic header click to expand/collapse subtopics
+          topicHeader.addEventListener('click', (e) => {
+            if (e.target.type !== 'checkbox') {
+              const isExpanded = subtopicsContainer.classList.toggle('expanded');
+              expandIcon.classList.toggle('expanded', isExpanded);
+            }
+          });
+
+          topicSection.appendChild(topicHeader);
+          topicSection.appendChild(subtopicsContainer);
+          section.appendChild(topicSection);
+        }
+
+        container.appendChild(section);
+      }
+    }
+
+    function updateUI() {
+      // Set current month in selector
+      document.getElementById('month-selector').value = currentMonth;
+      document.getElementById('monthly-goal').value = getCurrentMonthData().monthlyGoal || globalSettings.monthlyGoal;
+      
+      renderTopics();
+      updateDashboard();
+    }
+
+    function resetCurrentMonth() {
+      if (confirm(`Are you sure you want to reset all progress for ${currentMonth}?`)) {
+        monthlyData[currentMonth] = { 
+          checked: {}, 
+          completedCount: 0,
+          monthlyGoal: globalSettings.monthlyGoal 
+        };
+        saveToFirebase();
+        updateUI();
+      }
+    }
+
+    function exportData() {
+      const exportData = {
+        monthlyData,
+        globalSettings,
+        exportDate: new Date().toISOString(),
+        totalTopics: Object.values(topics).reduce((acc, arr) => acc + arr.length, 0)
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], 
+        { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cat-tracker-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Event Listeners
+    document.getElementById('month-selector').addEventListener('change', (e) => {
+      currentMonth = e.target.value;
+      updateUI();
+    });
+
+    document.getElementById('monthly-goal').addEventListener('change', (e) => {
+      const goal = parseInt(e.target.value) || 50;
+      globalSettings.monthlyGoal = goal;
+      
+      if (!monthlyData[currentMonth]) {
+        monthlyData[currentMonth] = { 
+          checked: {}, 
+          completedCount: 0,
+          monthlyGoal: goal 
+        };
+      } else {
+        monthlyData[currentMonth].monthlyGoal = goal;
+      }
+      
+      saveToFirebase();
+      updateDashboard();
+    });
+
+    // Initialize
+    loadFromFirebase();
+    
+    // Set current month as default
+    const now = new Date();
+    currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+  </script>
+</body>
+</html>
